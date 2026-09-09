@@ -1,0 +1,27 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: vidasalud-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: catalog_db
+      MYSQL_USER: catalog_user
+      MYSQL_PASSWORD: catalog_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  catalog-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-catalog:latest
+    depends_on:
+      - mysql-db
+    ports:
+      - "8081:8080" # Ajustar según el puerto interno
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/catalog_db
+      SPRING_DATASOURCE_USERNAME: catalog_user
+      SPRING_DATASOURCE_PASSWORD: catalog_password
+
+volumes:
+  mysql_data:
