@@ -4,24 +4,57 @@ services:
     container_name: vidasalud-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: catalog_db
-      MYSQL_USER: catalog_user
-      MYSQL_PASSWORD: catalog_password
+      MYSQL_DATABASE: catalog_db 
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init-sql:/docker-entrypoint-initdb.d 
+
+  bff-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-bff:latest
+    container_name: bff-svc
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
 
   catalog-svc:
     image: <tu-registro-ecr>/ms-vidasalud-catalog:latest
+    container_name: catalog-svc
     depends_on:
       - mysql-db
-    ports:
-      - "8081:8080" # Ajustar según el puerto interno
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/catalog_db
-      SPRING_DATASOURCE_USERNAME: catalog_user
-      SPRING_DATASOURCE_PASSWORD: catalog_password
+
+  appointments-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-appointments:latest
+    container_name: appointments-svc
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/appointments_db
+
+  notify-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-notify:latest
+    container_name: notify-svc
+
+  report-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-report:latest
+    container_name: report-svc
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/report_db
+
+  audit-svc:
+    image: <tu-registro-ecr>/ms-vidasalud-audit:latest
+    container_name: audit-svc
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/audit_db
 
 volumes:
   mysql_data:
+
