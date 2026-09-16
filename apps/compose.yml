@@ -1,60 +1,85 @@
+version: '3.8'
+
 services:
   mysql-db:
     image: mysql:8.0
     container_name: vidasalud-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: catalog_db 
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-sql:/docker-entrypoint-initdb.d 
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-proot_password"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
 
   bff-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-bff:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-bff:latest
     container_name: bff-svc
+    restart: on-failure
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      JWT_ISSUER_URI: "https://login.microsoftonline.com/43341e84-316b-40a7-a02f-5c94afd3d730/v2.0"
+      API_GATEWAY_URL: "https://944046146394.execute-api.us-east-1.amazonaws.com"
 
   catalog-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-catalog:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-catalog:latest
     container_name: catalog-svc
+    restart: on-failure
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/catalog_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/catalog_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
 
   appointments-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-appointments:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-appointments:latest
     container_name: appointments-svc
+    restart: on-failure
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/appointments_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/appointments_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
 
   notify-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-notify:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-notify:latest
     container_name: notify-svc
+    restart: on-failure
 
   report-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-report:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-report:latest
     container_name: report-svc
+    restart: on-failure
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/report_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/report_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
 
   audit-svc:
-    image: <tu-registro-ecr>/ms-vidasalud-audit:latest
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-audit:latest
     container_name: audit-svc
+    restart: on-failure
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/audit_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/audit_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
 
 volumes:
   mysql_data:
-
