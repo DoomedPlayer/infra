@@ -52,11 +52,18 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/appointments_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root_password
+      RABBITMQ_HOST: 172.31.31.167
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin123
 
   notify-svc:
     image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-notify:latest
     container_name: notify-svc
     restart: on-failure
+    environment:
+      RABBITMQ_HOST: 172.31.31.167
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin123
 
   report-svc:
     image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-report:latest
@@ -81,6 +88,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/audit_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root_password
+  
+  admin-rabbit-svc:
+    image: 944046146394.dkr.ecr.us-east-1.amazonaws.com/ms-vidasalud-rabbitmq:latest
+    container_name: ms-admin-mq
+    restart: on-failure
+    environment:
+      - RABBITMQ_HOST=172.31.31.167 
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
 
 volumes:
   mysql_data:
